@@ -7,6 +7,8 @@ idx_start = 1; % index of day start
 dayCount = 1; % Day index
 dayArr = convertCharsToStrings(D{:, 1});
 
+oneYear = table2array(D(:, 3));
+
 datCell = cell([], 1); % Datacell with a cell for each day
 
 figure(); hold on;
@@ -25,4 +27,4 @@ while idx_start <= N
     dayCount = dayCount +1;
 end
 
-save datCell.mat datCell
+save datCell.mat datCell oneYear
