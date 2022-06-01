@@ -35,24 +35,49 @@ hold off
 save datCell.mat datCell oneYear
 
 %% Plot the entire year
-figure();
+figure(); hold on
 title("The entire year")
 days = (1:N).*365./N;
 plot(days, oneYear);
+hold off
 
 %% Plot derivative of the entire year
-figure();
+figure(); hold on
 title("The derivate of entire year")
 ddt_oneYear = diff(oneYear);
 plot(days(2:end), ddt_oneYear);
+hold off
 
 %% Plot derivative of each day
+n = max(size(datCell{1}));
+X = zeros(max(size(datCell)), n);
+
 figure(); hold on
 title("The derivative of each day on top of each other")
 for d = 1:(dayCount-1)
     idxStart = dayStartIdx{d};
     idxEnd = dayEndIdx{d};
+    if idxEnd == N
+        X(d, 1:end-1) = ddt_oneYear(idxStart:N-1);
+    else
+        X(d, :) = ddt_oneYear(idxStart:idxEnd);
+    end
+    plot(ddt_oneYear(idxStart:min(idxEnd,N-1)))
     
-    plot(ddt_oneYear(idxStart:min(idxEnd,N)))
 end
+hold off
+
+%% Plot std of each minute of the day
+S = std(X);
+figure(); hold on
+title("The standard deviation of the derivative of each minute in the day")
+plot(S);
+
+hold off
+%% Plot mean of each minute of the day
+M = mean(X, 1);
+figure(); hold on
+title("The mean of the derivative of each minute in the day")
+plot(M);
+
 hold off
