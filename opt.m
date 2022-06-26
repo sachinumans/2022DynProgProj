@@ -57,16 +57,33 @@ end
 
 
 %% Implementation
+alpha_bot = 0.87;
+alpha_top = 0.96;
 
-cost_max = zeros(2, 366);
-c = zeros(1,8785);
-b = zeros(1,8785);
-u = zeros(1,8785);
+cost_max = ones(2, 366);
+c = ones(1,8785);
+b = ones(1,8785);
+u = ones(1,8785);
 
 for i=0:365
-    for j = 1:24
-        c(i*24+j) =  D.Load()
+    for j = 0:23
+        c(i*24+j+1) =  D.Load(i*24+j*60+1); 
+    
+        u(i*24+j+2) = U(cost_max(1,i+1), floor(2*c(i*24+j+1)), floor(b(i*24+j+1)), 24-j);
+
+        if u(i*24+j+2) > 9            
+        u(i*24+j+2) =  b(i*24+j+1) - alpha_bot* (u(i*24+j+2)-9);
+        end
+        if u(j+2) < 9 
+           b(i*24+j+2) = b(i*24+j+1) - alpha_top * (u(i*24+j+2)-9);
+        end
+
+        for k=1:60
+                cost_max(1,i+1) = max(cost_max(1,i+1), D.Load(i*24+(j*60)+k) - u(j+2));
+                cost_max(2,i+1) = max(cost_max(2,i+1), D.Load(i*24+(j*60)+k));
+        end
+
     end
 end
 
-
+price = [sum(cost_max(1,:))*1.5 sum(cost_max(2,:))*1.5];
