@@ -4,7 +4,7 @@ clc
 
 if ~exist("D", "var"); D = readtable("data.csv"); end
 
-load('matlab.mat');
+load('Z.mat');
 
 time = 60;
 states = [20 20 14];
@@ -34,13 +34,17 @@ for p = 2: steps
                 
                 for n = 8:1
                     if j <(states(2) - n) && k < (states(3)-n)
-                        m(9-n) = random(Z,[1 20])*J(:,j,k+n+1,p-1);
+%                         m(9-n) = random(Z,[1 20])*J(:,j,k+n+1,p-1);
+                          m(9-n) = Z(i,j-n,:) * J(:,j,k+n,p-1).';
                     end
                 end
-                m(9) = random(Z,[1 20])*J(:,j,k,p-1);
+%                 m(9) = random(Z,[1 20])*J(:,j,k,p-1);
+for tmp
+                m(9) = Z(i,j,:)*J(:,j,k,p-1).';
                 for n = 1:8
                     if (j > (n-1)) && (k > (n-1))
-                      m(9+n) = random(Z,[1 20])*J(:,j,k-n+1,p-1);   
+%                       m(9+n) = random(Z,[1 20])*J(:,j,k-n+1,p-1);  
+                        m(9+n) = Z(i,j,:).*J(:,j,k,p-1);
                     end               
                 end
                 [J(i,j,k,p),U(i,j,k,p)] = min(m);                
