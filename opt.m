@@ -35,16 +35,18 @@ for p = 2: steps
                 for n = 8:1
                     if j <(states(2) - n) && k < (states(3)-n)
 %                         m(9-n) = random(Z,[1 20])*J(:,j,k+n+1,p-1);
-                          m(9-n) = Z(i,j-n,:) * J(:,j,k+n,p-1).';
+                          Z1(:) = squeeze(Z(i,j-n, :));
+                          m(9-n) = Z1 * J(:,j,k+n,p-1);
                     end
                 end
 %                 m(9) = random(Z,[1 20])*J(:,j,k,p-1);
-for tmp
-                m(9) = Z(i,j,:)*J(:,j,k,p-1).';
+                Z1(:) = squeeze(Z(i,j, :));
+                m(9) = Z1*J(:,j,k,p-1);
                 for n = 1:8
                     if (j > (n-1)) && (k > (n-1))
 %                       m(9+n) = random(Z,[1 20])*J(:,j,k-n+1,p-1);  
-                        m(9+n) = Z(i,j,:).*J(:,j,k,p-1);
+                        Z1(:) = squeeze(Z(i,j, :));
+                        m(9+n) = Z1*J(:,j,k,p-1);
                     end               
                 end
                 [J(i,j,k,p),U(i,j,k,p)] = min(m);                
@@ -52,3 +54,19 @@ for tmp
         end 
      end
 end
+
+
+%% Implementation
+
+cost_max = zeros(2, 366);
+c = zeros(1,8785);
+b = zeros(1,8785);
+u = zeros(1,8785);
+
+for i=0:365
+    for j = 1:24
+        c(i*24+j) =  D.Load()
+    end
+end
+
+
