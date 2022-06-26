@@ -69,3 +69,19 @@ end
 m = reshape(m,1440,366);
 m = max(m);
 G_T = m(end);
+
+
+%% Plots
+for day = 1:1
+    LoadDay = reshape(D.Load,1440,ceil(length(D.Load)/1440));
+    [LoadDayMax,LoadDayMaxInd] = max(LoadDay(:,day));
+    figure
+    plot(LoadDay(:,day));
+    hold on
+    plot(LoadDayMaxInd,LoadDayMax,'ro');
+    grid on
+    xlabel("Time [min]");
+    ylabel("Power[kW]");
+    title("Day " + day);
+    legend("Consumed Power","Maximum consumed power")
+end
