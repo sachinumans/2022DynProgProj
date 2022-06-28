@@ -88,7 +88,7 @@ states = [20 20 14]; % current max (0.5kW steps); current consumption (0.5kW ste
  alpha_bot = 0.87;
  alpha_top = 0.96;
 
- term_cost_battery = 1;
+ term_cost_battery = 5;
  running_cost = 0;
  terminal_cost = 5;
 
@@ -156,7 +156,7 @@ for i=0:365
         end
 
         for k=1:60
-                cost_max(1,i+1) = max(cost_max(1,i+1), D.Load(i*24+(j*60)+k) - (b(i*24+j+2)-b(i*24+j+1)/2));
+                cost_max(1,i+1) = max(cost_max(1,i+1), D.Load(i*24+(j*60)+k) - (b(i*24+j+2)-b(i*24+j+1))/2);
                 cost_max(2,i+1) = max(cost_max(2,i+1), D.Load(i*24+(j*60)+k));
         end
 
@@ -187,28 +187,29 @@ b_power = kron(b_power,ones(60, 1));
 b = reshape(b(1:end-1),24,366);
 b = kron(b,ones(60, 1));
 %% Plots
-for day = 1:1
+for day = 1:100
     LoadDay = reshape(D.Load,1440,ceil(length(D.Load)/1440));
     [LoadDayMax,LoadDayMaxInd] = max(LoadDay(:,day));
     figure
-    plot(LoadDay(:,day));
+    subplot(3,1,1)
+    plot(LoadDay(:,day),'r','LineWidth',1.5);
     hold on
-    plot(LoadDayMaxInd,LoadDayMax,'ro');
+    plot(LoadDayMaxInd,LoadDayMax,'ro','LineWidth',1.5);
     hold on
-    plot(grid_power(:,day));
+    plot(grid_power(:,day),'b','LineWidth',1.5);
     hold on
-    plot(max_ind(day),max_grid(day),'go');
+    plot(max_ind(day),max_grid(day),'bo','LineWidth',1.5);
     grid on
     xlabel("Time [min]");
     ylabel("Power[kW]");
     title("Day " + day);
     legend("Consumed Power","Maximum consumed power","Grid Power Consumed","Maximum grid power consumed")
 
-    figure
-    plot(b_power(:,day))
+    subplot(3,1,2)
+    plot(b_power(:,day),'r','LineWidth',1.5)
     hold on
-    yline(umin,'r');
-    yline(umax,'g');
+    yline(umin,'b','LineWidth',1.5);
+    yline(umax,'k','LineWidth',1.5);
     grid on
     xlabel("Time [min]");
     ylabel("Power[kW]");
@@ -216,11 +217,11 @@ for day = 1:1
     ylim([-7,7])
     legend("Battery change in power","Discharging limit","Charging limit")
 
-    figure
-    plot(b(:,day)./2)
+    subplot(3,1,3)
+    plot(b(:,day)./2,'r','LineWidth',1.5)
     hold on
-    yline(7);
-    yline(0);
+    yline(7,'k','LineWidth',1.5);
+    yline(0,'b','LineWidth',1.5);
     grid on
     xlabel("Time [min]");
     ylabel("Capacity[kWh]");
