@@ -81,9 +81,9 @@ states = [20 20 14]; % current max (0.5kW steps); current consumption (0.5kW ste
  alpha_bot = 0.87;
  alpha_top = 0.96;
 
- term_cost_battery = 10;
- running_cost = 10;
- terminal_cost = 10;
+ term_cost_battery = 1000;
+ running_cost = 0;
+ terminal_cost = 500;
 
  
  for i = 1:states(1)
@@ -165,7 +165,7 @@ b_power = diff(b)./2;
 % Grid Power
 for i=0:365
     for j = 0:steps-1  
-        grid_power(i*steps+j+1) = max(D.Load(i*steps+j+1)-b_power(i*steps+j+1),0);        
+        grid_power(i*steps+j+1) = max(D.Load(i*steps+j+1)+b_power(i*steps+j+1),0);        
     end
 end
 
@@ -178,6 +178,7 @@ b = reshape(b(1:end-1),steps,366);
 %% Plots
 for day = 1:30
     LoadDay = reshape(D.Load,1440,ceil(length(D.Load)/1440));
+    bat = LoadDay(:,day) - grid_power(:,day);
     [LoadDayMax,LoadDayMaxInd] = max(LoadDay(:,day));
     figure
     subplot(3,1,1)
@@ -195,7 +196,7 @@ for day = 1:30
     legend("Consumed Power","Maximum consumed power","Grid Power Consumed","Maximum grid power consumed")
 
     subplot(3,1,2)
-    plot(b_power(:,day),'r','LineWidth',1.5)
+    plot(bat,'r','LineWidth',1.5)
     hold on
     yline(umin,'b','LineWidth',1.5);
     yline(umax,'k','LineWidth',1.5);
