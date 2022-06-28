@@ -92,78 +92,87 @@ states = [20 20 14]; % current max (0.5kW steps); current consumption (0.5kW ste
  running_cost = 0;
  terminal_cost = 5;
 
+ for term_cost_battery = 1:50
+     for running_cost = 1:15
+         for terminal_cost = 1:30
  
- for i = 1:states(1)
-    for j = 1:states(2)
-        for k =1:states(3)
-          J(i,j,k,24) = terminal_cost*(i^2) + term_cost_battery*(14-k)^2;
-        end
-    end 
- end
+             for i = 1:states(1)
+                for j = 1:states(2)
+                    for k =1:states(3)
+                      J(i,j,k,24) = terminal_cost*(i^2) + term_cost_battery*(14-k)^2;
+                    end
+                end 
+             end
+            
+            for p = steps-1:-1:1
+                 for i = 1:states(1)
+                    for j = 1:states(2)
+                        for k =1:states(3)
+                          m = ones(19,1)*(10^9);
+                          Zloc = Z1(22-j:21-j+20);
+                          Zloc(1) = Zloc(1) + sum(Z1(1:22-j-1));
+                          Zloc(end) = Zloc(end) + sum(Z1(21-j+20+1:end));
+                            for n = 1:8                   
+                               if (j+n <= 20) && (k+n <= 14)
+                                    m(n) = running_cost*(14 - k)*2 + Zloc*J(:,j+n,k+n,p+1); 
+                               end
+                            end              
+                          
+                            m(9) = running_cost*(14 - k)*2 + Zloc*J(:,j,k,p+1);
+                            
+                            for n = 1:10
+                                if (j-n >= 1) && (k-n >=1)
+                                    m(9+n) = running_cost*(14 - k)*2 + Zloc*J(:,j-n,k-n,p+1); 
+                                end               
+                            end
+            
+                            [J(i,j,k,p),U(i,j,k,p)] = min(m);            
+                        end
 
-for p = steps-1:-1:1
-     for i = 1:states(1)
-        for j = 1:states(2)
-            for k =1:states(3)
-              m = ones(19,1)*(10^9);
-              Zloc = Z1(22-j:21-j+20);
-              Zloc(1) = Zloc(1) + sum(Z1(1:22-j-1));
-              Zloc(end) = Zloc(end) + sum(Z1(21-j+20+1:end));
-                for n = 1:8                   
-                   if (j+n <= 20) && (k+n <= 14)
-                        m(n) = running_cost*(14 - k)*2 + Zloc*J(:,j+n,k+n,p+1); 
-                   end
-                end              
-              
-                m(9) = running_cost*(14 - k)*2 + Zloc*J(:,j,k,p+1);
-                
-                for n = 1:10
-                    if (j-n >= 1) && (k-n >=1)
-                        m(9+n) = running_cost*(14 - k)*2 + Zloc*J(:,j-n,k-n,p+1); 
-                    end               
-                end
-
-                [J(i,j,k,p),U(i,j,k,p)] = min(m);
-
+                    end 
+                 end
             end
-        end 
+            
+            %% Implementation
+            
+            cost_max = ones(2, 366);
+            b = ones(1,8785);
+            u = ones(1,8785)*9;
+            
+            for i=0:365
+                for j = 0:23       
+            
+                    u(i*24+j+1) = U(ceil(cost_max(1,i+1)), ceil(2*D.Load(i*24+j*60+1)), ceil(b(i*24+j+1)), j+1);
+                    if j==23
+                     u(i*24+j+1) = 9;   
+                    end
+                    if u(i*24+j+1) > 9           
+                    b(i*24+j+2) =  max(b(i*24+j+1) - alpha_bot* (u(i*24+j+1)-9), 1);
+                    end
+            
+                    if u(i*24+j+1) < 9 
+                       b(i*24+j+2) = min(b(i*24+j+1) + alpha_top * (9- u(i*24+j+1)), 14);
+                    end
+            
+                    if u(i*24+j+1) == 9 
+                       b(i*24+j+2) = b(i*24+j+1);
+                    end
+            
+                    for k=1:60
+                            cost_max(1,i+1) = max(cost_max(1,i+1), D.Load(i*24+(j*60)+k) - (b(i*24+j+2)-b(i*24+j+1)/2));
+                            cost_max(2,i+1) = max(cost_max(2,i+1), D.Load(i*24+(j*60)+k));
+                    end
+            
+                end
+            end
+            
+            price = [sum(cost_max(1,:))*1.5 sum(cost_max(2,:))*1.5];
+
+            stuff(term_cost_battery,running_cost,terminal_cost) = price(1);
+            
+         end
      end
-end
-
-%% Implementation
-
-cost_max = ones(2, 366);
-b = ones(1,8785);
-u = ones(1,8785)*9;
-
-for i=0:365
-    for j = 0:23       
-
-        u(i*24+j+1) = U(ceil(cost_max(1,i+1)), ceil(2*D.Load(i*24+j*60+1)), ceil(b(i*24+j+1)), j+1);
-        if j==23
-         u(i*24+j+1) = 9;   
-        end
-        if u(i*24+j+1) > 9           
-        b(i*24+j+2) =  max(b(i*24+j+1) - alpha_bot* (u(i*24+j+1)-9), 1);
-        end
-
-        if u(i*24+j+1) < 9 
-           b(i*24+j+2) = min(b(i*24+j+1) + alpha_top * (9- u(i*24+j+1)), 14);
-        end
-
-        if u(i*24+j+1) == 9 
-           b(i*24+j+2) = b(i*24+j+1);
-        end
-
-        for k=1:60
-                cost_max(1,i+1) = max(cost_max(1,i+1), D.Load(i*24+(j*60)+k) - (b(i*24+j+2)-b(i*24+j+1)/2));
-                cost_max(2,i+1) = max(cost_max(2,i+1), D.Load(i*24+(j*60)+k));
-        end
-
-    end
-end
-
-price = [sum(cost_max(1,:))*1.5 sum(cost_max(2,:))*1.5];
+ end
 
 
 %% Plots
